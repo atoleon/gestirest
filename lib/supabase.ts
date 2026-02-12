@@ -29,6 +29,50 @@ export interface MenuCategory {
   items: MenuItem[];
 }
 
+// Mapa de idiomas con sus banderas y nombres
+const languageMap: Record<string, { name: string; flag: string }> = {
+  es: { name: "Español", flag: "🇪🇸" },
+  en: { name: "English", flag: "🇬🇧" },
+  fr: { name: "Français", flag: "🇫🇷" },
+  de: { name: "Deutsch", flag: "🇩🇪" },
+  it: { name: "Italiano", flag: "🇮🇹" },
+  pt: { name: "Português", flag: "🇵🇹" },
+  zh: { name: "中文", flag: "🇨🇳" },
+  ja: { name: "日本語", flag: "🇯🇵" },
+  ru: { name: "Русский", flag: "🇷🇺" },
+  ar: { name: "العربية", flag: "🇸🇦" },
+};
+
+export interface Language {
+  code: string;
+  name: string;
+  flag: string;
+}
+
+// Obtener idiomas disponibles para un restaurante
+export async function getAvailableLanguages(restaurantId: string): Promise<Language[]> {
+  const restaurantIdNum = parseInt(restaurantId);
+
+  const { data, error } = await supabase
+    .from("menu")
+    .select("language_code")
+    .eq("restaurant_id", restaurantIdNum);
+
+  if (error) {
+    console.error("Error fetching languages:", error);
+    return [];
+  }
+
+  // Extraer códigos únicos
+  const uniqueCodes = [...new Set(data.map((row) => row.language_code))];
+
+  return uniqueCodes.map((code) => ({
+    code,
+    name: languageMap[code]?.name ?? code,
+    flag: languageMap[code]?.flag ?? "🏳️",
+  }));
+}
+
 // Funciones para obtener datos del menú
 export async function getMenuItems(restaurantId: string, languageCode: string) {
   // Debug: Ver parámetros de entrada
