@@ -29,6 +29,40 @@ export interface MenuCategory {
   items: MenuItem[];
 }
 
+export interface Restaurant {
+  id: number;
+  name: string;
+  quick_desc: string;
+  phone: string;
+  header_img: string;
+}
+
+// Obtener información del restaurante
+export async function getRestaurantInfo(restaurantId: string): Promise<Restaurant | null> {
+  const restaurantIdNum = parseInt(restaurantId);
+
+  console.log("🏪 Fetching restaurant:", { restaurantId, restaurantIdNum });
+
+  const { data, error } = await supabase
+    .from("restaurants")
+    .select("id, name, quick_desc, phone, header_img")
+    .eq("id", restaurantIdNum);
+
+  console.log("🏪 Restaurant response:", { data, error });
+
+  if (error) {
+    console.error("Error fetching restaurant:", error);
+    return null;
+  }
+
+  if (!data || data.length === 0) {
+    console.error("No restaurant found with id:", restaurantIdNum);
+    return null;
+  }
+
+  return data[0] as Restaurant;
+}
+
 // Mapa de idiomas con sus banderas y nombres
 const languageMap: Record<string, { name: string; flag: string }> = {
   es: { name: "Español", flag: "🇪🇸" },

@@ -5,9 +5,11 @@ import Image from "next/image";
 import { useRef, useState, useEffect } from "react";
 import {
   getMenuItems,
+  getRestaurantInfo,
   groupItemsByCategory,
   MenuItem,
   MenuCategory,
+  Restaurant,
 } from "@/lib/supabase";
 
 export default function MenuPage() {
@@ -16,6 +18,7 @@ export default function MenuPage() {
   const language = params.language as string;
 
   const [menuData, setMenuData] = useState<MenuCategory[]>([]);
+  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>("");
@@ -28,7 +31,12 @@ export default function MenuPage() {
         setLoading(true);
         setError(null);
 
-        const items = await getMenuItems(restaurantId, language);
+        const [restaurantData, items] = await Promise.all([
+          getRestaurantInfo(restaurantId),
+          getMenuItems(restaurantId, language),
+        ]);
+
+        setRestaurant(restaurantData);
 
         if (items.length === 0) {
           setError("No hay items en el menú para este restaurante e idioma");
@@ -125,18 +133,23 @@ export default function MenuPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header con imagen */}
       <div className="relative w-full h-48 bg-gray-200">
-        <Image
-          src="/mock-header-rest.png"
-          alt="Restaurant"
-          fill
-          className="object-cover"
-          priority
-        />
+        {restaurant?.header_img ? (
+          <Image
+            src={restaurant.header_img}
+            alt={restaurant.name}
+            fill
+            className="object-cover"
+            unoptimized
+            priority
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-amber-600 via-orange-500 to-red-600" />
+        )}
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-black/10" />
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center text-white">
             <h1 className="text-3xl md:text-4xl font-bold drop-shadow-lg">
-              La Bella Vista
+              {restaurant?.name ?? "Restaurante"}
             </h1>
             <p className="text-sm md:text-base mt-1 drop-shadow-md">
               Idioma: {language.toUpperCase()}
